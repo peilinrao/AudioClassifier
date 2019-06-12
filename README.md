@@ -1,2 +1,2 @@
 # LSTM_AUDIO
-A speaker classification program
+A speaker classification program.
