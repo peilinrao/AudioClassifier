@@ -64,6 +64,7 @@ for i in range(OUTPUT_DIM):
 X_train = sum(X_train, []) # list of tensors
 y_train = sum(y_train, [])
 BATCH_SIZE = len(X_train)
+print("BATCH_SIZE is:", BATCH_SIZE)
 
 # Now apply minibatch to the data
 def batch(X_train, y_train,shuffle):

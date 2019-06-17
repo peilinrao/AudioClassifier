@@ -6,18 +6,6 @@ import pickle
 import torch.nn.functional as F
 import torch.optim as optim
 import random
-BATCH_SIZE = 256
-OUTPUT_DIM = 2
-
-
-import torch
-import torch.nn as nn
-import torchaudio
-import numpy as np
-import pickle
-import torch.nn.functional as F
-import torch.optim as optim
-import random
 import librosa
 import matplotlib.pyplot as plt
 
@@ -28,8 +16,8 @@ LSTM_INPUT_SIZE = 128     # Input dim of LSTM_input
 HIDDEN_DIM = 256
 SEQ_LEN = 20            # Define how many numbers to describe a piece of audio
 OUTPUT_DIM = 20         # Will be set to 20
-UPPER_FILE = 10       # how many files (up to) do we want
-LR = 0.03               #learning rate
+UPPER_FILE = 20       # how many files (up to) do we want
+LR = 0.01               #learning rate
 NUM_LAYERS = 3          # Underlying layers in LSTM network
 NUM_EPOCHS = 500         # How many times we want to run the network, each time with random combination of dataset
 #####################
@@ -52,7 +40,7 @@ for i in range(OUTPUT_DIM):
     count = 0
     for j in range(UPPER_FILE):
         try:
-            y, sr = librosa.load('Training_Set/voice/'+speaker_list[i]+'/'+speaker_list[i]+'_'+("%03d" % (j))+'.wav', duration=10)
+            y, sr = librosa.load('Training_Set/voice/'+speaker_list[i]+'/'+speaker_list[i]+'_'+("%03d" % (20))+'.wav', duration=10)
             mfccs = librosa.feature.mfcc(y=y, sr=sr,n_mfcc=LSTM_INPUT_SIZE)
             print("Loading",j,"th audio for speaker",speaker_list[i])
             X_raw[i].append(torch.FloatTensor(mfccs))
@@ -73,9 +61,10 @@ for i in range(OUTPUT_DIM):
     X_train.append(list(temp)[:-1])
     y_train.append([i]*(len(temp)-1))
 
-X_train = sum(X_train, []) # list of tensors
+X_train = sum(X_train, [])[0:2202] # list of tensors
 y_train = sum(y_train, [])
 BATCH_SIZE = len(X_train)
+print("BATCH_SIZE is:", BATCH_SIZE)
 
 # Now apply minibatch to the data
 def batch(X_train, y_train,shuffle):
@@ -134,13 +123,13 @@ model = LSTM(LSTM_INPUT_SIZE, HIDDEN_DIM, batch_size=BATCH_SIZE, output_dim=OUTP
 loss_fn = torch.nn.CrossEntropyLoss()
 optimiser = optim.SGD(model.parameters(), lr=LR, momentum=0.9)
 
-checkpoint = torch.load("mytraining.pt")
+checkpoint = torch.load("1762.pt")
 model.load_state_dict(checkpoint['model_state_dict'])
 optimiser.load_state_dict(checkpoint['optimizer_state_dict'])
 #####################
 # Train model
 #####################
-print('\x1b[6;30;42m' + "--------------FINAL test begins--------------"+'\x1b[0m')
+print('\x1b[6;30;42m' + "--------------SANITY--------------"+'\x1b[0m')
 batch_X, batch_y = batch(X_train, y_train, True)
 
 y_pred_batch = model(batch_X)
@@ -155,5 +144,3 @@ for i in range(len(np_batch_y)):
     if np_batch_y[i] == my_label[i]:
         accuracy += 1
 print("The current accuracy is:", accuracy, "/", len(np_batch_y))
-loss = loss_fn(y_pred_batch, batch_y)
-print("loss is:",loss)

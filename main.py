@@ -16,7 +16,7 @@ LSTM_INPUT_SIZE = 128     # Input dim of LSTM_input
 HIDDEN_DIM = 256
 SEQ_LEN = 20            # Define how many numbers to describe a piece of audio
 OUTPUT_DIM = 20         # Will be set to 20
-UPPER_FILE = 10       # how many files (up to) do we want
+UPPER_FILE = 5       # how many files (up to) do we want
 LR = 0.03               #learning rate
 NUM_LAYERS = 3          # Underlying layers in LSTM network
 NUM_EPOCHS = 500         # How many times we want to run the network, each time with random combination of dataset
@@ -93,9 +93,12 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.num_layers = num_layers
+        self.output_dim = output_dim
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+        self.lstm1 = nn.LSTMCell(self.input_dim, self.hidden_dim)
+        self.lstm2 = nn.LSTMCell(self.hidden_dim, self.hidden_dim)
+        self.lstm3 = nn.LSTMCell(self.hidden_dim, self.hidden_dim)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -111,12 +114,16 @@ class LSTM(nn.Module):
         # shape of lstm_out: [input_size, batch_size, hidden_dim]
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
-        lstm_out, self.hidden = self.lstm(input.view(SEQ_LEN, self.batch_size, -1))
-
-        # Only take the output from the final timetep
-        # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y  = self.hidden2label(lstm_out[-1])
-        return y
+        # lstm_out, self.hidden = self.lstm(input.view(SEQ_LEN, self.batch_size, -1))
+        output_seq = torch.empty((SEQ_LEN,
+                                  self.batch_size,
+                                  self.output_dim))
+        for i in range(self.batch_size):
+            lstm_out, self.hidden  = self.lstm1(input[:, i, :])
+            lstm_out, self.hidden = self.lstm2(lstm_out, self.hidden)
+            lstm_out, self.hidden = self.lstm3(lstm_out, self.hidden)
+            output_seq[t] = self.hidden2label(lstm_out[-1])
+        return output_seq
 
 model = LSTM(LSTM_INPUT_SIZE, HIDDEN_DIM, batch_size=BATCH_SIZE, output_dim=OUTPUT_DIM, num_layers=NUM_LAYERS)
 loss_fn = torch.nn.CrossEntropyLoss()
