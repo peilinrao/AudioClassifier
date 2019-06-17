@@ -1,2 +1,2 @@
-# LSTM_AUDIO
+# AudioClassifier
 A speaker classification program.
