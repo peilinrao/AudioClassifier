@@ -1,5 +1,5 @@
 # AudioClassifier
-A speaker classification program:
+A speaker classification neural network:
 
 main.py:
       Initialise the data and start training, save the result in 'mytraining.pt' in each epoch.
